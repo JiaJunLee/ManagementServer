@@ -15,7 +15,7 @@ class User extends BaseDocument {
         EMPLOYEE
     }
 
-    @NotNull List<String> userGroupIds = [:]
+    @NotNull List<String> userGroupIds = []
 
     @NotNull String username
     @NotNull String hsKey

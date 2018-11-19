@@ -35,4 +35,8 @@ class UserService extends BaseService<User, String> {
         return userRepository.findAllByType(type)
     }
 
+    User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+    }
+
 }
