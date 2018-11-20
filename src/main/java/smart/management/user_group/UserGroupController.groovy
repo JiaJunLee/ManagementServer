@@ -21,4 +21,10 @@ class UserGroupController {
         return new ServerResponse(content: userGroupService.findAll(), message: 'query successful!')
     }
 
+    @RequestMapping('/delete')
+    ServerResponse delete(String userGroupId) {
+        userGroupService.deleteById(userGroupId)
+        return new ServerResponse(message: 'delete successful')
+    }
+
 }

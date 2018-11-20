@@ -5,8 +5,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import smart.management.common.ServerResponse
+import smart.management.security.AuthenticationAnnotation
 import smart.management.user.User
 import smart.management.user.UserService
+import smart.management.user_group.UserGroupService
 
 @RestController
 @RequestMapping('/customer')
@@ -14,6 +16,19 @@ class CustomerController {
 
     @Autowired UserService userService
     @Autowired CustomerService customerService
+    @Autowired UserGroupService userGroupService
+
+    @RequestMapping('/all')
+    @AuthenticationAnnotation
+    ServerResponse all() {
+        List<Customer> customers = customerService.findAll().toList()
+        customers?.each { currentCustomer ->
+            currentCustomer?.visibilityUserGroupIds?.each { userGroupId ->
+                currentCustomer.visibilityUserGroups.add(userGroupService.findById(userGroupId))
+            }
+        }
+        return new ServerResponse(content: customers, message: 'query successful')
+    }
 
     @RequestMapping
     ServerResponse index(String userId) {

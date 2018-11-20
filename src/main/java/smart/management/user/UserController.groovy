@@ -1,36 +1,43 @@
 package smart.management.user
 
+import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import smart.management.common.ServerResponse
+import smart.management.security.AuthenticationAnnotation
 import smart.management.security.AuthenticationException
 import smart.management.security.utils.HMAC
 import smart.management.security.utils.JWT
 import smart.management.user_group.UserGroup
 import smart.management.user_group.UserGroupService
+import smart.management.user_information.UserInformationService
 
 import javax.servlet.http.Cookie
 import javax.servlet.http.HttpServletResponse
 
+@Slf4j
 @RestController
 @RequestMapping('/user')
 class UserController {
 
     @Autowired UserService userService
     @Autowired UserGroupService userGroupService
+    @Autowired UserInformationService userInformationService
     @Autowired JWT jwt
 
-    @RequestMapping("/register")
-    ServerResponse create(String username, String password) {
+    static final String DEFAULT_PASSWORD = '123456'
+
+    @PostMapping("/register")
+    @AuthenticationAnnotation
+    ServerResponse register(String username) {
         String hsKey = HMAC.generateKey(HMAC.HMAC_SHA512)
         User user = new User(
                 username: username,
                 hsKey: hsKey,
-                hsPassword: HMAC.digest(password, hsKey, HMAC.HMAC_SHA512),
+                hsPassword: HMAC.digest(DEFAULT_PASSWORD, hsKey, HMAC.HMAC_SHA512),
                 type: User.UserType.EMPLOYEE
         )
         userService.createUser(user)
@@ -43,6 +50,7 @@ class UserController {
     }
 
     @RequestMapping('/join_user_group')
+    @AuthenticationAnnotation
     ServerResponse joinUserGroup(String userId, String userGroupId) {
         User user = userService.findById(userId)
         UserGroup userGroup = userGroupService.findById(userGroupId)
@@ -56,7 +64,7 @@ class UserController {
         return new ServerResponse(resultCode: ServerResponse.ServerResponseCode.REJECTED, message: 'user already joined this group!')
     }
 
-    @RequestMapping('/change_password')
+    @PostMapping('/change_password')
     ServerResponse changePassword(String userId, String password) {
         String hsKey = HMAC.generateKey(HMAC.HMAC_SHA512)
         User user = userService.findById(userId)
@@ -66,7 +74,7 @@ class UserController {
         return new ServerResponse(content: ['id': user.id, 'username': user.username, type: user.type], message: 'change successful')
     }
 
-    @RequestMapping('/login')
+    @PostMapping('/login')
     ServerResponse authentication (String username, String password, HttpServletResponse httpServletResponse) {
         User user = userService.findByUsername(username)
         if (user == null) {
@@ -79,10 +87,12 @@ class UserController {
         String jwtToken = jwt?.sign(['id': user?.id, 'username': user?.username, 'hsKey': user?.hsKey, 'hsPassword': user?.hsPassword])
         Cookie cookie = new Cookie('token', jwtToken)
         cookie.setHttpOnly(true)
-        cookie.setDomain('localhost')
+        cookie.setDomain('192.168.124.12')
         cookie.setPath('/')
         cookie.setMaxAge(JWT.TOKEN_EXPIRE_TIME)
         httpServletResponse.addCookie(cookie)
+
+        log.info("user: ${user.id} / ${user.username} / ${user.type} login system")
 
         return new ServerResponse(content: ['id': user.id, 'username': user.username, 'type': user.type], message: 'login successful')
     }
@@ -90,6 +100,24 @@ class UserController {
     @RequestMapping('/denied')
     ServerResponse denied() {
         return new ServerResponse(message: 'Access denied', resultCode: ServerResponse.ServerResponseCode.REJECTED)
+    }
+
+    @RequestMapping('/employees')
+    ServerResponse employees() {
+        List<User> employees = userService.findAll().findAll { it.type == User.UserType.EMPLOYEE }
+        employees?.each {
+            it.hsPassword = null
+            it.hsKey = null
+            it.userInformation = userInformationService.findByUserId(it.id)
+        }
+        return new ServerResponse(content: employees, message: 'query successful')
+    }
+
+    @RequestMapping('/delete')
+    @AuthenticationAnnotation
+    ServerResponse delete(String userId) {
+        userService.deleteById(userId)
+        return new ServerResponse(message: 'delete successful')
     }
 
 }

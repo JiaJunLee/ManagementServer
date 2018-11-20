@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface UserInformationRepository extends PagingAndSortingRepository<UserInformation, String> {
 
+    UserInformation findByUserId(String userId)
+
 }

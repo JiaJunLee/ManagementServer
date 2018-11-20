@@ -8,7 +8,8 @@ import smart.management.user.User.UserType
 interface UserRepository extends PagingAndSortingRepository<User, String> {
 
     User findByUsername(String username)
-    List<User> findAllByType(UserType type);
+
+    List<User> findAllByType(UserType type)
 
 }
 

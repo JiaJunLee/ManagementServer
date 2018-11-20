@@ -2,6 +2,7 @@ package smart.management.user
 
 import org.springframework.data.mongodb.core.mapping.Document
 import smart.management.common.BaseDocument
+import smart.management.user_information.UserInformation
 
 import javax.validation.constraints.NotNull
 
@@ -21,6 +22,7 @@ class User extends BaseDocument {
     @NotNull String hsKey
     @NotNull String hsPassword
     UserType type
+    UserInformation userInformation
 
     boolean isAdministrator() {
         return this.type == UserType.ADMINISTRATOR
