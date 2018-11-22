@@ -21,7 +21,7 @@ abstract class BaseService<T, ID> {
         if (optional != null && optional.isPresent()) {
             return optional.get()
         } else {
-            throw new ResourceNotFoundException("Resource cannot be found!")
+            return null
         }
     }
 

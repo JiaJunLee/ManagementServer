@@ -8,6 +8,7 @@ import smart.management.common.ServerResponse
 import smart.management.security.AuthenticationAnnotation
 import smart.management.user.User
 import smart.management.user.UserService
+import smart.management.user_group.UserGroup
 import smart.management.user_group.UserGroupService
 
 @RestController
@@ -24,7 +25,10 @@ class CustomerController {
         List<Customer> customers = customerService.findAll().toList()
         customers?.each { currentCustomer ->
             currentCustomer?.visibilityUserGroupIds?.each { userGroupId ->
-                currentCustomer.visibilityUserGroups.add(userGroupService.findById(userGroupId))
+                UserGroup userGroup = userGroupService.findById(userGroupId)
+                if (userGroup) {
+                    currentCustomer.visibilityUserGroups.add(userGroup)
+                }
             }
         }
         return new ServerResponse(content: customers, message: 'query successful')
@@ -43,16 +47,29 @@ class CustomerController {
     }
 
     @RequestMapping('/delete')
+    @AuthenticationAnnotation
     ServerResponse delete(String customerId) {
         return new ServerResponse(content: customerService.deleteById(customerId), message: 'delete successful')
     }
 
     @RequestMapping('/visibility')
+    @AuthenticationAnnotation
     ServerResponse visibility(String customerId, String userGroupId) {
         Customer customer = customerService.findById(customerId)
         customer.addVisibilityUserGroupId(userGroupId)
         customerService.save(customer)
         return new ServerResponse(content: customer, message: 'add visibility user group successful')
+    }
+
+    @RequestMapping('/visibilities')
+    @AuthenticationAnnotation
+    ServerResponse visibilities(String[] customerIds, String userGroupId) {
+        customerIds?.each { customerId ->
+            Customer customer = customerService.findById(customerId)
+            customer.addVisibilityUserGroupId(userGroupId)
+            customerService.save(customer)
+        }
+        return new ServerResponse(message: 'add visibilities user group successful')
     }
 
     @ExceptionHandler(Customer.VisibilityUserGroupAlreadyExists.class)
@@ -61,6 +78,7 @@ class CustomerController {
     }
 
     @RequestMapping('/remove_visibility')
+    @AuthenticationAnnotation
     ServerResponse removeVisibility(String customerId, String userGroupId) {
         Customer customer = customerService.findById(customerId)
         customer.removeVisibilityUserGroupId(userGroupId)

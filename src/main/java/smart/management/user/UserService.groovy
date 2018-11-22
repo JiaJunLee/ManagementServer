@@ -23,7 +23,7 @@ class UserService extends BaseService<User, String> {
 
     User createUser(User user) {
         if (userRepository.findByUsername(user.username) == null) {
-            userRepository.save(user)
+            this.save(user)
             userInformationRepository.save(new UserInformation(userId: user.id))
         } else {
             throw new UserAlreadyExistsException()

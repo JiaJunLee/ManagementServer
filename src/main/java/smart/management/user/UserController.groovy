@@ -23,6 +23,12 @@ import javax.servlet.http.HttpServletResponse
 @RequestMapping('/user')
 class UserController {
 
+    private static final List<String> DOMAINS = [
+            "129.204.16.191",
+            "rongejinfu.cn",
+            "www.rongejinfu.cn"
+    ]
+
     @Autowired UserService userService
     @Autowired UserGroupService userGroupService
     @Autowired UserInformationService userInformationService
@@ -59,6 +65,26 @@ class UserController {
         return new ServerResponse(content: ['id': user.id, 'username': user.username, 'userGroupIds': user.userGroupIds.join(',')], message: 'join successful')
     }
 
+    @RequestMapping('/join_users_group')
+    @AuthenticationAnnotation
+    ServerResponse joinUsersGroup(String[] userIds, String userGroupId) {
+        userIds?.each { userId ->
+            User user = userService.findById(userId)
+            user.addUserGroup(userGroupId)
+            userService.save(user)
+        }
+        return new ServerResponse(message: 'join users group successful')
+    }
+
+    @RequestMapping('/exit_user_group')
+    @AuthenticationAnnotation
+    ServerResponse exitUserGroup(String userId, String userGroupId) {
+        User user = userService.findById(userId)
+        user.removeUserGroup(userGroupId)
+        userService.save(user)
+        return new ServerResponse(content: ['id': user.id, 'username': user.username, 'userGroupIds': user.userGroupIds.join(',')], message: 'exit successful')
+    }
+
     @ExceptionHandler(User.UserGroupAlreadyJoined.class)
     ServerResponse handleUserGroupAlreadyJoined() {
         return new ServerResponse(resultCode: ServerResponse.ServerResponseCode.REJECTED, message: 'user already joined this group!')
@@ -85,12 +111,15 @@ class UserController {
         }
 
         String jwtToken = jwt?.sign(['id': user?.id, 'username': user?.username, 'hsKey': user?.hsKey, 'hsPassword': user?.hsPassword])
-        Cookie cookie = new Cookie('token', jwtToken)
-        cookie.setHttpOnly(true)
-        cookie.setDomain('192.168.124.12')
-        cookie.setPath('/')
-        cookie.setMaxAge(JWT.TOKEN_EXPIRE_TIME)
-        httpServletResponse.addCookie(cookie)
+
+        DOMAINS?.each { currentDomain ->
+            Cookie cookie = new Cookie('token', jwtToken)
+            cookie.setHttpOnly(true)
+            cookie.setDomain(currentDomain)
+            cookie.setPath('/')
+            cookie.setMaxAge(JWT.TOKEN_EXPIRE_TIME)
+            httpServletResponse.addCookie(cookie)
+        }
 
         log.info("user: ${user.id} / ${user.username} / ${user.type} login system")
 
@@ -103,12 +132,19 @@ class UserController {
     }
 
     @RequestMapping('/employees')
+    @AuthenticationAnnotation
     ServerResponse employees() {
         List<User> employees = userService.findAll().findAll { it.type == User.UserType.EMPLOYEE }
         employees?.each {
             it.hsPassword = null
             it.hsKey = null
             it.userInformation = userInformationService.findByUserId(it.id)
+            it.userGroupIds.each { userGroupId ->
+                UserGroup userGroup = userGroupService.findById(userGroupId)
+                if (userGroup) {
+                    it.userGroups.add(userGroup)
+                }
+            }
         }
         return new ServerResponse(content: employees, message: 'query successful')
     }
