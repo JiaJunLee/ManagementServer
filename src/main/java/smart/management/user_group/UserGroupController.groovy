@@ -15,13 +15,13 @@ class UserGroupController {
     @RequestMapping('/create')
     @AuthenticationAnnotation
     ServerResponse create(UserGroup userGroup) {
-        return new ServerResponse(content: userGroupService.save(userGroup), message: 'create successful!')
+        return new ServerResponse(content: userGroupService.save(userGroup), message: 'create successful')
     }
 
     @RequestMapping
     @AuthenticationAnnotation
     ServerResponse index() {
-        return new ServerResponse(content: userGroupService.findAll(), message: 'query successful!')
+        return new ServerResponse(content: userGroupService.findAll(), message: 'query successful')
     }
 
     @RequestMapping('/delete')

@@ -26,7 +26,9 @@ class UserController {
     private static final List<String> DOMAINS = [
             "129.204.16.191",
             "rongejinfu.cn",
-            "www.rongejinfu.cn"
+            "www.rongejinfu.cn",
+            "localhost",
+            ""
     ]
 
     @Autowired UserService userService
@@ -154,6 +156,17 @@ class UserController {
     ServerResponse delete(String userId) {
         userService.deleteById(userId)
         return new ServerResponse(message: 'delete successful')
+    }
+
+    @RequestMapping('/reset_password')
+    @AuthenticationAnnotation
+    ServerResponse resetPassword(String userId) {
+        User user =  userService.findById(userId)
+        String hsKey = HMAC.generateKey(HMAC.HMAC_SHA512)
+        user.hsKey = hsKey
+        user.hsPassword = HMAC.digest(DEFAULT_PASSWORD, hsKey, HMAC.HMAC_SHA512)
+        userService.save(user)
+        return new ServerResponse(message: 'reset password successful')
     }
 
 }

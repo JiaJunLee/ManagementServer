@@ -10,10 +10,10 @@ class UserInformation extends BaseDocument {
 
     @NotNull String userId
 
-    @NotNull String name = 'System User'
-    @NotNull String sex = Sex.UNKNOWN
+    String name = 'System User'
+    String sex = Sex.UNKNOWN
     String phoneNumber
-    @JsonFormat(pattern = 'yyyy/MM/dd HH:mm:ss') Date birth
+    @JsonFormat(pattern = 'yyyy-MM-dd') Date birth
     String remarks
 
 }
