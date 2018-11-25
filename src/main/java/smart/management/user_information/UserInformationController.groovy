@@ -23,11 +23,11 @@ class UserInformationController {
         UserInformation userInformation = null
         if (userInformationId) {
             userInformation = userInformationService.findById(userInformationId)
-            if (name) { userInformation.name = name }
-            if (phoneNumber) { userInformation.phoneNumber = phoneNumber }
-            if (sex) { userInformation.sex = sex }
+            userInformation.name = name
+            userInformation.phoneNumber = phoneNumber
+            userInformation.sex = sex
             if (birth) { userInformation.birth = DATE_FORMAT.parse(birth) }
-            if (remarks) { userInformation.remarks = remarks }
+            userInformation.remarks = remarks
             userInformationService.save(userInformation)
         }
         return new ServerResponse(content: userInformation, message: 'save successful')
