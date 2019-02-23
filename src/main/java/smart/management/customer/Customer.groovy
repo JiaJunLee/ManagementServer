@@ -14,6 +14,7 @@ class Customer extends BaseDocument {
 
     @NotNull List<String> visibilityUserGroupIds = []
     @Transient List<UserGroup> visibilityUserGroups = []
+    String customerTypeId
 
     @NotNull String name
     @NotNull String phoneNumber
