@@ -2,6 +2,7 @@ package smart.management.customer
 
 import org.springframework.data.annotation.Transient
 import smart.management.common.BaseDocument
+import smart.management.common.Remark
 import smart.management.common.Sex
 import smart.management.user_group.UserGroup
 
@@ -20,6 +21,7 @@ class Customer extends BaseDocument {
     @NotNull String phoneNumber
     @NotNull Sex sex = Sex.UNKNOWN
     String remarks
+    List<Remark> remarksNew = []
 
     void addVisibilityUserGroupId(String userGroupId) {
         if (visibilityUserGroupIds.contains(userGroupId)) {

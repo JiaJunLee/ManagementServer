@@ -32,8 +32,16 @@ abstract class BaseService<T, ID> {
         return getRepository().save(t)
     }
 
+    Iterable<T> saveAll(Iterable<T> ts) {
+        return getRepository().saveAll(ts)
+    }
+
     void deleteById(ID id) {
         getRepository().deleteById(id)
+    }
+
+    void deleteAll(List<ID> ids) {
+        ids.each { getRepository().deleteById(it) }
     }
 
     Iterable<T> findAll() {

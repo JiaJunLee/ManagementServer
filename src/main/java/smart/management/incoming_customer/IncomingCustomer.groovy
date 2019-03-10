@@ -20,6 +20,7 @@ class IncomingCustomer extends BaseDocument {
     @NotNull Sex sex = Sex.UNKNOWN
     @NotNull String income
     @NotNull String cost
+    String customerTypeId
 
     void addVisibilityUserGroupId(String userGroupId) {
         if (visibilityUserGroupIds.contains(userGroupId)) {
